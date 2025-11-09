@@ -1,20 +1,41 @@
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/contexts/AuthContext';
+import AppNavigator from './src/navigation/AppNavigator';
+import { notificationService } from './src/services/notificationService';
 
 export default function App() {
+  useEffect(() => {
+    // Inicializar notificações push
+    notificationService.registerForPushNotificationsAsync();
+
+    // Listener para notificações recebidas
+    const receivedListener = notificationService.addNotificationReceivedListener(
+      (notification) => {
+        console.log('📬 Notificação recebida:', notification);
+      }
+    );
+
+    // Listener para quando usuário toca na notificação
+    const responseListener = notificationService.addNotificationResponseReceivedListener(
+      (response) => {
+        console.log('👆 Notificação tocada:', response);
+      }
+    );
+
+    return () => {
+      receivedListener.remove();
+      responseListener.remove();
+    };
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNavigator />
+        <StatusBar style="light" />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

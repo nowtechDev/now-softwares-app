@@ -1,0 +1,222 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerContentComponentProps } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
+
+// Screens
+import DashboardScreen from '../screens/DashboardScreen';
+import ChatScreen from '../screens/ChatScreen';
+import CalendarScreen from '../screens/CalendarScreen';
+import RemindersScreen from '../screens/RemindersScreen';
+import KanbanScreen from '../screens/KanbanScreen';
+import FinancialScreen from '../screens/FinancialScreen';
+import LoginScreen from '../screens/LoginScreen';
+
+const Drawer = createDrawerNavigator();
+
+function CustomDrawerContent(props: DrawerContentComponentProps) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  return (
+    <DrawerContentScrollView {...props} style={styles.drawerContainer}>
+      {/* Header do Drawer */}
+      <View style={styles.drawerHeader}>
+        <View style={styles.profileCircle}>
+          <Ionicons name="person" size={32} color="#fff" />
+        </View>
+        <Text style={styles.userName}>
+          {user?.firstName || user?.email?.split('@')[0] || 'Usuário'}
+        </Text>
+        <Text style={styles.userEmail}>{user?.email}</Text>
+      </View>
+
+      {/* Itens do Menu */}
+      <View style={styles.drawerItems}>
+        <DrawerItemList {...props} />
+      </View>
+
+      {/* Logout Button */}
+      <View style={styles.drawerFooter}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+          <Text style={styles.logoutText}>Sair</Text>
+        </TouchableOpacity>
+        <Text style={styles.version}>Versão 1.0.0</Text>
+      </View>
+    </DrawerContentScrollView>
+  );
+}
+
+function AppDrawerNavigator() {
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#6366f1',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+        drawerActiveTintColor: '#6366f1',
+        drawerInactiveTintColor: '#6b7280',
+        drawerActiveBackgroundColor: '#eef2ff',
+        drawerStyle: {
+          backgroundColor: '#fff',
+        },
+        drawerLabelStyle: {
+          fontSize: 16,
+          fontWeight: '500',
+        },
+      }}
+    >
+      <Drawer.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          title: 'Dashboard',
+          drawerIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          title: 'Chat / Omnichannel',
+          drawerIcon: ({ color }) => <Ionicons name="chatbubbles-outline" size={24} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{
+          title: 'Calendário',
+          drawerIcon: ({ color }) => <Ionicons name="calendar-outline" size={24} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Reminders"
+        component={RemindersScreen}
+        options={{
+          title: 'Lembretes',
+          drawerIcon: ({ color }) => <Ionicons name="notifications-outline" size={24} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Kanban"
+        component={KanbanScreen}
+        options={{
+          title: 'Kanban',
+          drawerIcon: ({ color }) => <Ionicons name="grid-outline" size={24} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Financial"
+        component={FinancialScreen}
+        options={{
+          title: 'Financeiro',
+          drawerIcon: ({ color }) => <Ionicons name="cash-outline" size={24} color={color} />,
+        }}
+      />
+    </Drawer.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="business" size={60} color="#6366f1" />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <AppDrawerNavigator /> : <LoginScreen />}
+    </NavigationContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 16,
+  },
+  drawerContainer: {
+    flex: 1,
+  },
+  drawerHeader: {
+    backgroundColor: '#6366f1',
+    padding: 20,
+    paddingTop: 40,
+    marginTop: -4,
+  },
+  profileCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#818cf8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#e0e7ff',
+  },
+  drawerItems: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  drawerFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    padding: 20,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#ef4444',
+    marginLeft: 12,
+  },
+  version: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+});
