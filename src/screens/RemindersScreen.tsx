@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService, Reminder } from '../services/api';
+import { socketService } from '../services/socket';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import NotificationsStatusScreen from './NotificationsStatusScreen';
 // Notificações serão gerenciadas pelo backend via schedules
@@ -48,6 +49,53 @@ export default function RemindersScreen({ navigation }: any) {
 
   useEffect(() => {
     loadReminders();
+  }, []);
+
+  // Socket.IO Real-time para Schedules (Lembretes)
+  useEffect(() => {
+    console.log('🔌 [RemindersScreen] Conectando socket para real-time...');
+    
+    const socket = socketService.getSocket();
+    if (!socket) {
+      console.warn('⚠️ [RemindersScreen] Socket não disponível');
+      return;
+    }
+
+    // Listeners para Schedules (task_reminder)
+    const handleScheduleCreated = (data: any) => {
+      console.log('⏰ [RemindersScreen] Lembrete criado via socket:', data);
+      // Apenas adicionar se for task_reminder
+      if (data.schedule_type === 'task_reminder') {
+        setReminders(prev => [...prev, data]);
+      }
+    };
+
+    const handleSchedulePatched = (data: any) => {
+      console.log('⏰ [RemindersScreen] Lembrete atualizado via socket:', data);
+      if (data.schedule_type === 'task_reminder') {
+        setReminders(prev => prev.map(r => r._id === data._id ? data : r));
+      }
+    };
+
+    const handleScheduleRemoved = (data: any) => {
+      console.log('⏰ [RemindersScreen] Lembrete removido via socket:', data);
+      setReminders(prev => prev.filter(r => r._id !== data._id));
+    };
+
+    // Adicionar listeners
+    socket.on('api/schedules created', handleScheduleCreated);
+    socket.on('api/schedules patched', handleSchedulePatched);
+    socket.on('api/schedules removed', handleScheduleRemoved);
+
+    console.log('✅ [RemindersScreen] Listeners Socket.IO adicionados');
+
+    // Cleanup
+    return () => {
+      console.log('🧹 [RemindersScreen] Removendo listeners Socket.IO...');
+      socket.off('api/schedules created', handleScheduleCreated);
+      socket.off('api/schedules patched', handleSchedulePatched);
+      socket.off('api/schedules removed', handleScheduleRemoved);
+    };
   }, []);
 
   const loadReminders = async () => {

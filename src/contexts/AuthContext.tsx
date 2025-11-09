@@ -59,13 +59,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Registrar push token após login bem-sucedido
       try {
+        console.log('📱 [AuthContext] Solicitando push token...');
         const pushToken = await notificationService.registerForPushNotificationsAsync();
+        console.log('📱 [AuthContext] Push token obtido:', pushToken);
+        
         if (pushToken && loggedUser._id) {
+          console.log('📱 [AuthContext] Enviando push token para API...');
+          console.log('📱 [AuthContext] User ID:', loggedUser._id);
           await apiService.updatePushToken(loggedUser._id, pushToken);
-          console.log('✅ Push token registrado com sucesso');
+          console.log('✅ [AuthContext] Push token registrado com sucesso!');
+        } else {
+          console.warn('⚠️ [AuthContext] Push token ou user ID ausente');
         }
       } catch (pushError) {
-        console.error('⚠️ Erro ao registrar push token (não crítico):', pushError);
+        console.error('⚠️ [AuthContext] Erro ao registrar push token (não crítico):', pushError);
         // Não falhar o login por erro no push
       }
     } catch (error) {

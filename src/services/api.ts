@@ -558,12 +558,19 @@ class ApiService {
   // Push Notifications
   async updatePushToken(userId: string, pushToken: string) {
     try {
-      const response = await this.axiosInstance.patch(`/users/${userId}`, {
+      console.log('📤 [API] Enviando pushToken para backend...');
+      console.log('📤 [API] User ID:', userId);
+      console.log('📤 [API] Push Token:', pushToken);
+      
+      const response = await this.axiosInstance.post('/updatePushToken', {
+        userId,
         pushToken,
       });
+      
+      console.log('✅ [API] Resposta do backend:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Update push token error:', error);
+      console.error('❌ [API] Erro ao atualizar push token:', error);
       throw error;
     }
   }

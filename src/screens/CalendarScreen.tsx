@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../services/api';
+import { socketService } from '../services/socket';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CalendarEvent {
@@ -36,6 +37,70 @@ export default function CalendarScreen({ navigation }: any) {
   const [eventEndDate, setEventEndDate] = useState(new Date());
 
   useEffect(() => { loadData(); }, [currentDate]);
+
+  // Socket.IO Real-time para Calendar e Tasks
+  useEffect(() => {
+    console.log('🔌 [CalendarScreen] Conectando socket para real-time...');
+    
+    const socket = socketService.getSocket();
+    if (!socket) {
+      console.warn('⚠️ [CalendarScreen] Socket não disponível');
+      return;
+    }
+
+    // Listeners para Calendar
+    const handleCalendarCreated = (data: any) => {
+      console.log('📅 [CalendarScreen] Evento criado via socket:', data);
+      setEvents(prev => [...prev, data]);
+    };
+
+    const handleCalendarPatched = (data: any) => {
+      console.log('📅 [CalendarScreen] Evento atualizado via socket:', data);
+      setEvents(prev => prev.map(e => e._id === data._id ? data : e));
+    };
+
+    const handleCalendarRemoved = (data: any) => {
+      console.log('📅 [CalendarScreen] Evento removido via socket:', data);
+      setEvents(prev => prev.filter(e => e._id !== data._id));
+    };
+
+    // Listeners para Tasks
+    const handleTaskCreated = (data: any) => {
+      console.log('✅ [CalendarScreen] Tarefa criada via socket:', data);
+      setTasks(prev => [...prev, data]);
+    };
+
+    const handleTaskPatched = (data: any) => {
+      console.log('✅ [CalendarScreen] Tarefa atualizada via socket:', data);
+      setTasks(prev => prev.map(t => t._id === data._id ? data : t));
+    };
+
+    const handleTaskRemoved = (data: any) => {
+      console.log('✅ [CalendarScreen] Tarefa removida via socket:', data);
+      setTasks(prev => prev.filter(t => t._id !== data._id));
+    };
+
+    // Adicionar listeners
+    socket.on('api/calendar created', handleCalendarCreated);
+    socket.on('api/calendar patched', handleCalendarPatched);
+    socket.on('api/calendar removed', handleCalendarRemoved);
+    socket.on('api/tasks created', handleTaskCreated);
+    socket.on('api/tasks patched', handleTaskPatched);
+    socket.on('api/tasks removed', handleTaskRemoved);
+
+    console.log('✅ [CalendarScreen] Listeners Socket.IO adicionados');
+
+    // Cleanup
+    return () => {
+      console.log('🧹 [CalendarScreen] Removendo listeners Socket.IO...');
+      socket.off('api/calendar created', handleCalendarCreated);
+      socket.off('api/calendar patched', handleCalendarPatched);
+      socket.off('api/calendar removed', handleCalendarRemoved);
+      socket.off('api/tasks created', handleTaskCreated);
+      socket.off('api/tasks patched', handleTaskPatched);
+      socket.off('api/tasks removed', handleTaskRemoved);
+    };
+  }, []);
 
   const loadData = async () => {
     try {
