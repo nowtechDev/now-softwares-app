@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import notificationNavigationService from '../services/notificationNavigationService';
 
 // Screens
 import DashboardScreen from '../screens/DashboardScreen';
@@ -106,18 +107,51 @@ function AppStackNavigator() {
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading } = useAuth();
+  const navigationRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Registrar referência de navegação
+    if (navigationRef.current) {
+      notificationNavigationService.setNavigationRef(navigationRef.current);
+    }
+
+    // Configurar listeners de notificações
+    const unsubscribe = notificationNavigationService.setupNotificationListeners();
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Ionicons name="business" size={60} color="#6366f1" />
         <Text style={styles.loadingText}>Carregando...</Text>
       </View>
     );
   }
 
+  // Configuração de deep linking
+  const linking: any = {
+    prefixes: ['nowapp://', 'https://app.nowdigital.com.br'],
+    config: {
+      screens: {
+        Dashboard: 'home',
+        Chats: 'chats',
+        Calendar: 'calendar',
+        Reminders: 'reminders',
+        Kanban: 'kanban',
+        Financial: 'financial',
+        AIAssistant: 'ai',
+        More: 'more',
+        Conversation: 'conversation/:clientId',
+        Account: 'account',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       {isAuthenticated ? <AppStackNavigator /> : <LoginScreen />}
     </NavigationContainer>
   );
