@@ -17,8 +17,10 @@
       "bundleIdentifier": "com.priscilaneu.nowapp",
       "infoPlist": {
         "UIBackgroundModes": [
+          "remote-notification",
           "remote-notification"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -26,21 +28,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "notification": {
-        "icon": "./assets/icon.png",
-        "color": "#6366f1",
-        "androidMode": "default",
-        "androidCollapsedTitle": "Now App"
-      },
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "WAKE_LOCK",
-        "POST_NOTIFICATIONS",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "WAKE_LOCK",
-        "POST_NOTIFICATIONS"
+        "WAKE_LOCK"
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -50,19 +41,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "notification": {
-      "icon": "./assets/icon.png",
-      "color": "#6366f1",
-      "androidMode": "default",
-      "androidCollapsedTitle": "Now App"
-    },
     "plugins": [
       [
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#6366f1",
-          "sounds": []
+          "color": "#6366f1"
         }
       ]
     ],
